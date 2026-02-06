@@ -1,9 +1,10 @@
 fastapi
 uvicorn[standard]
-sqlalchemy
+sqlalchemy~=2.0.46
 asyncpg
-alembic
+alembic~=1.18.3
 pydantic-settings
 python-dotenv
 email-validator
 greenlet
+pydantic~=2.12.5
