@@ -17,9 +17,24 @@ class BookingService:
         self.db = db
 
     async def create_booking(self, user_id: uuid.UUID, table_id: int, start_time: datetime) -> Booking:
-        # 1. Проверяем рабочие часы (12:00 - 22:00)
-        # В ТЗ сказано: закрытие в 22:00. Т.к. бронь на 2 часа, 
-        # последнее время начала брони — 20:00.
+        """
+        Creates a new booking after validating business rules.
+
+        - Checks if the booking time is within restaurant operating hours.
+        - Verifies that the requested table is available for the 2-hour slot.
+        - Triggers an asynchronous email confirmation task upon success.
+
+        Args:
+            user_id: The ID of the user creating the booking.
+            table_id: The ID of the table to book.
+            start_time: The desired start time for the booking.
+
+        Returns:
+            The newly created Booking object.
+
+        Raises:
+            ValueError: If a business rule is violated (e.g., table is booked).
+        """
         if not (12 <= start_time.hour < 20):
             raise ValueError("Restaurant is open for bookings from 12:00 to 20:00 (closes at 22:00)")
 
