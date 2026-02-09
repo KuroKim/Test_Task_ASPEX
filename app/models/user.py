@@ -21,5 +21,4 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    # Связь с бронированиями
     bookings: Mapped[List["Booking"]] = relationship(back_populates="user")

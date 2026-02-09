@@ -26,7 +26,6 @@ async def register(
 
 @router.post("/login")
 async def login(
-        # OAuth2PasswordRequestForm заставляет Swagger рисовать красивую форму логина
         form_data: OAuth2PasswordRequestForm = Depends(),
         db: AsyncSession = Depends(deps.get_db)
 ):

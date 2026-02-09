@@ -2,13 +2,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase
 from app.core.config import settings
 
-# Создаем асинхронный движок
 engine = create_async_engine(
     settings.SQLALCHEMY_DATABASE_URI,
-    echo=True,  # Логирует все SQL запросы (удобно для отладки, в проде отключить)
+    echo=True,  # Set to False in production to disable SQL logging
 )
 
-# Фабрика сессий
+# Async session factory
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
@@ -17,12 +16,12 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-# Базовый класс для моделей
+# Base class for declarative models
 class Base(DeclarativeBase):
     pass
 
 
-# Dependency для FastAPI (будем использовать в роутах)
+# FastAPI dependency for database sessions
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session

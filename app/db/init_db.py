@@ -1,7 +1,6 @@
 import asyncio
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
-# ВАЖНО: Импортируем всё из base, чтобы SQLAlchemy видела все модели (User, Table, Booking)
 from app.db.base import Table, Booking, User
 
 TABLE_CONFIG = [
@@ -12,9 +11,12 @@ TABLE_CONFIG = [
 
 
 async def init_tables():
+    """
+    Initializes the database with predefined restaurant tables.
+    """
     async with AsyncSessionLocal() as session:
         try:
-            # Проверяем, есть ли уже столы
+            # Check if tables are already initialized
             result = await session.execute(select(Table))
             tables = result.scalars().all()
 

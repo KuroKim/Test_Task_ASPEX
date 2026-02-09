@@ -3,14 +3,13 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import Base
 
-# Объявляем Generic-тип (чтобы IDE понимала, с какой моделью мы работаем)
 ModelType = TypeVar("ModelType", bound=Base)
 
 
 class BaseRepository(Generic[ModelType]):
     """
-    Базовый класс с CRUD операциями.
-    Наследуясь от него, мы сразу получаем create/get/update/delete.
+    Abstract base class for data access logic.
+    Provides standard CRUD operations.
     """
 
     def __init__(self, model: Type[ModelType], session: AsyncSession):
@@ -28,14 +27,18 @@ class BaseRepository(Generic[ModelType]):
         return result.scalars().all()
 
     async def create(self, attributes: dict) -> ModelType:
+        """
+        Creates a new record in the database.
+        """
         obj = self.model(**attributes)
         self.session.add(obj)
-        # Мы не делаем commit здесь, это задача Service слоя (Unit of Work)
-        # Но делаем flush, чтобы получить ID объекта
         await self.session.flush()
         await self.session.refresh(obj)
         return obj
 
     async def delete(self, id: Any) -> None:
+        """
+        Deletes a record by its primary key.
+        """
         query = delete(self.model).where(self.model.id == id)
         await self.session.execute(query)

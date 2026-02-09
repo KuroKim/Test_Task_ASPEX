@@ -3,21 +3,26 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 
-# Базовый класс (общие поля)
 class UserBase(BaseModel):
+    """
+    Base user schema with common fields.
+    """
     email: EmailStr
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
 
 
-# Схема для создания (то, что шлет клиент при регистрации)
 class UserCreate(UserBase):
+    """
+    Schema for user registration, including password.
+    """
     password: str
 
 
-# Схема для чтения (то, что мы отдаем клиенту)
-# Важно: тут НЕТ пароля!
 class UserRead(UserBase):
+    """
+    Schema for user data output, strictly excluding password hash.
+    """
     id: uuid.UUID
     is_admin: bool
 

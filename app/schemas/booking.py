@@ -7,11 +7,13 @@ class BookingBase(BaseModel):
     table_id: int
     booking_start: datetime
 
-    # Валидатор: время должно быть в будущем (простая проверка)
     @field_validator('booking_start')
     def validate_future(cls, v):
+        """
+        Ensures the booking date is set in the future.
+        """
         if v.replace(tzinfo=None) < datetime.now():
-            raise ValueError('Время бронирования должно быть в будущем')
+            raise ValueError('Booking time must be in the future')
         return v
 
 

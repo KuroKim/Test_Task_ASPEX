@@ -7,29 +7,34 @@ from app.models.user import User
 
 
 class AuthService:
+    """
+    Handles user authentication and registration logic.
+    """
+
     def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(db)
         self.db = db
 
     async def register_new_user(self, user_in: UserCreate) -> User:
-        """Регистрация пользователя: проверка email + хеширование пароля"""
-        # Проверяем, не занят ли email
+        """
+        Registers a new user: validates email uniqueness and hashes the password.
+        """
         existing_user = await self.user_repo.get_by_email(user_in.email)
         if existing_user:
             raise ValueError("User with this email already exists")
 
-        # Подготавливаем данные (заменяем сырой пароль на хеш)
         user_data = user_in.model_dump()
         password = user_data.pop("password")
         user_data["hashed_password"] = get_password_hash(password)
 
-        # Создаем через репозиторий
         new_user = await self.user_repo.create(user_data)
-        await self.db.commit()  # Фиксируем изменения в базе
+        await self.db.commit()
         return new_user
 
     async def authenticate_user(self, email: str, password: str) -> Optional[User]:
-        """Проверка логина/пароля"""
+        """
+        Authenticates a user by email and password.
+        """
         user = await self.user_repo.get_by_email(email)
         if not user:
             return None

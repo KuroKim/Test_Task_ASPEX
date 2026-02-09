@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.schemas.booking import BookingCreate, BookingRead
@@ -18,8 +18,8 @@ async def get_available_tables(
         db: AsyncSession = Depends(deps.get_db)
 ):
     """
-    Получить свободные столы на указанное время.
-    Пример: 2026-02-10T18:00:00
+    Retrieve list of available tables for a specific date and time.
+    Example: 2026-02-10T18:00:00
     """
     service = BookingService(db)
     return await service.get_available_tables_for_time(datetime_query)
@@ -28,9 +28,12 @@ async def get_available_tables(
 @router.post("/", response_model=BookingRead)
 async def create_booking(
         booking_in: BookingCreate,
-        current_user: User = Depends(deps.get_current_user),  # Требует авторизации
+        current_user: User = Depends(deps.get_current_user),
         db: AsyncSession = Depends(deps.get_db)
 ):
+    """
+    Create a new table reservation for the authenticated user.
+    """
     service = BookingService(db)
     try:
         return await service.create_booking(
@@ -47,7 +50,9 @@ async def get_my_bookings(
         current_user: User = Depends(deps.get_current_user),
         db: AsyncSession = Depends(deps.get_db)
 ):
-    """Get all bookings for the authenticated user"""
+    """
+    Get all active and future bookings for the authenticated user.
+    """
     service = BookingService(db)
     return await service.get_user_bookings(current_user.id)
 
@@ -58,7 +63,9 @@ async def cancel_booking(
         current_user: User = Depends(deps.get_current_user),
         db: AsyncSession = Depends(deps.get_db)
 ):
-    """Cancel a booking with a 1-hour prior notice policy"""
+    """
+    Cancel an existing booking (at least 1 hour prior to start time).
+    """
     service = BookingService(db)
     try:
         await service.delete_booking(booking_id, current_user.id)

@@ -8,11 +8,14 @@ from app.db.session import AsyncSessionLocal
 from app.models.user import User
 from app.repositories.user_repo import UserRepository
 
-# Указываем, где Swagger UI должен искать токен (в URL /auth/login)
+# Swagger UI will look for the token at this URL
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Database session dependency.
+    """
     async with AsyncSessionLocal() as session:
         yield session
 
@@ -21,6 +24,9 @@ async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: AsyncSession = Depends(get_db)
 ) -> User:
+    """
+    Validates the JWT token and returns the current authenticated user.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

@@ -10,13 +10,17 @@ class BookingRepository(BaseRepository[Booking]):
         super().__init__(Booking, session)
 
     async def get_by_user(self, user_id: uuid.UUID) -> List[Booking]:
-        """Получить все бронирования конкретного пользователя"""
+        """
+        Retrieves all bookings for a specific user.
+        """
         query = select(Booking).where(Booking.user_id == user_id)
         result = await self.session.execute(query)
         return result.scalars().all()
 
     async def get_by_id_and_user(self, booking_id: uuid.UUID, user_id: uuid.UUID) -> Optional[Booking]:
-        """Найти конкретную бронь пользователя (защита от удаления чужих броней)"""
+        """
+        Finds a specific booking for a user (ensures ownership).
+        """
         query = select(Booking).where(
             Booking.id == booking_id,
             Booking.user_id == user_id

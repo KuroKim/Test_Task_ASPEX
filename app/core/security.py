@@ -4,12 +4,14 @@ from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
 
-# Настройка хеширования паролей (bcrypt)
+# Password hashing configuration (bcrypt)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_access_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
-    """Генерация JWT токена"""
+    """
+    Generates a JWT access token.
+    """
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -23,10 +25,14 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Проверка соответствия пароля и хеша"""
+    """
+    Verifies if the provided password matches the stored hash.
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Генерация хеша из пароля"""
+    """
+    Generates a bcrypt hash from a plain password.
+    """
     return pwd_context.hash(password)

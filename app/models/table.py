@@ -11,7 +11,7 @@ class Table(Base):
     __tablename__ = "tables"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, unique=True)  # Например "Table 1"
+    name: Mapped[str] = mapped_column(String, unique=True)  # Like "Table 1"
     capacity: Mapped[int] = mapped_column(Integer)  # 2, 3, 6
 
     # Связь
