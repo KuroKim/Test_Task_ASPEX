@@ -1,4 +1,5 @@
 services:
+  # 1. База данных
   db:
     image: postgres:15-alpine
     restart: always
@@ -7,15 +8,58 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: restaurant_db
     ports:
-      - "5432:5432"
+      - "5432:5432" # Оставляем доступ снаружи для удобства проверки
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  # 2. Redis (Очередь задач)
   redis:
     image: redis:7-alpine
     restart: always
     ports:
       - "6379:6379"
+
+  # 3. Основное API приложение
+  api:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=restaurant_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=changethis_in_production_please
+      # Эти переменные "перебьют" настройки из pydantic, так как ENV имеет приоритет
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # 4. Celery Worker (Исполнитель фоновых задач)
+  worker:
+    build: .
+    restart: always
+    depends_on:
+      - redis
+      - db
+    environment:
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=restaurant_db
+      - REDIS_URL=redis://redis:6379/0
+    # Запускаем не uvicorn, а celery worker
+    command: celery -A app.worker.celery_app worker --loglevel=info
 
 volumes:
   postgres_data:
