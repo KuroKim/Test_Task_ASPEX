@@ -1,10 +1,25 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional, List
+import uuid
+from sqlalchemy import select
 from app.models.booking import Booking
 from app.repositories.base import BaseRepository
 
 
 class BookingRepository(BaseRepository[Booking]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session):
         super().__init__(Booking, session)
 
-    # Тут можно добавить специфичные методы, например "получить брони юзера"
+    async def get_by_user(self, user_id: uuid.UUID) -> List[Booking]:
+        """Получить все бронирования конкретного пользователя"""
+        query = select(Booking).where(Booking.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def get_by_id_and_user(self, booking_id: uuid.UUID, user_id: uuid.UUID) -> Optional[Booking]:
+        """Найти конкретную бронь пользователя (защита от удаления чужих броней)"""
+        query = select(Booking).where(
+            Booking.id == booking_id,
+            Booking.user_id == user_id
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()

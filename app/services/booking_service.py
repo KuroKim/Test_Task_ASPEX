@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.booking_repo import BookingRepository
@@ -67,6 +67,26 @@ class BookingService:
             send_booking_confirmation_email.delay(user.email, str(new_booking.id))
 
         return new_booking
+
+    async def delete_booking(self, booking_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        """
+        Cancels a booking if it's more than 1 hour before the start time.
+        """
+        booking = await self.booking_repo.get_by_id_and_user(booking_id, user_id)
+
+        if not booking:
+            raise ValueError("Booking not found or you don't have permission to delete it")
+
+        # Проверка времени: сейчас + 1 час должно быть меньше, чем начало брони
+        if datetime.now(timezone.utc) + timedelta(hours=1) > booking.booking_start:
+            raise ValueError("Cancellations are only allowed at least 1 hour before the booking starts")
+
+        await self.booking_repo.delete(booking_id)
+        await self.db.commit()
+
+    async def get_user_bookings(self, user_id: uuid.UUID) -> List[Booking]:
+        """Returns all bookings for a specific user"""
+        return await self.booking_repo.get_by_user(user_id)
 
     async def get_available_tables_for_time(self, start_time: datetime) -> List[Table]:
         """Поиск всех свободных столов на конкретное время"""

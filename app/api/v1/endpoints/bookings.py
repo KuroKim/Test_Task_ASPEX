@@ -1,3 +1,4 @@
+import uuid
 from typing import List
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -37,5 +38,29 @@ async def create_booking(
             table_id=booking_in.table_id,
             start_time=booking_in.booking_start
         )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/my", response_model=List[BookingRead])
+async def get_my_bookings(
+        current_user: User = Depends(deps.get_current_user),
+        db: AsyncSession = Depends(deps.get_db)
+):
+    """Get all bookings for the authenticated user"""
+    service = BookingService(db)
+    return await service.get_user_bookings(current_user.id)
+
+
+@router.delete("/{booking_id}", status_code=204)
+async def cancel_booking(
+        booking_id: uuid.UUID,
+        current_user: User = Depends(deps.get_current_user),
+        db: AsyncSession = Depends(deps.get_db)
+):
+    """Cancel a booking with a 1-hour prior notice policy"""
+    service = BookingService(db)
+    try:
+        await service.delete_booking(booking_id, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
